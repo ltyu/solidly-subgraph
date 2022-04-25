@@ -1,5 +1,21 @@
-type ExampleEntity @entity {
+type Pair @entity {
+  # pair address
   id: ID!
-  block: Bytes!
-  count: BigInt!
+  isStable: Boolean
+  token0: Token!
+  token1: Token!
+}
+
+type Gauge @entity {
+  id: ID!
+  bribeAddress: String
+}
+
+# ERC20 Token
+type Token @entity {
+  id: ID!
+  decimals: Integer
+  # isWhitelisted: Boolean
+  # name: String
+  # symbol: String
 }

@@ -1,4 +1,4 @@
-specVersion: 0.0.1
+specVersion: 0.0.2
 schema:
   file: ./schema.graphql
 dataSources:
@@ -8,15 +8,38 @@ dataSources:
     source:
       address: "0x3fAaB499b519fdC5819e3D7ed0C26111904cbc28"
       abi: BaseV1Factory
+      startBlock: 30511466
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
-
+        - Pair
       abis:
         - name: BaseV1Factory
           file: ./abis/BaseV1Factory.json
       eventHandlers:
+        - event: PairCreated(indexed address,indexed address,bool,address,uint256)
+          handler: handlePairCreated
+      file: ./src/pair/pair.mapping.ts
+  - kind: ethereum
+    name: BaseV1Voter
+    network: fantom
+    source:
+      address: "0xdC819F5d05a6859D2faCbB4A44E5aB105762dbaE"
+      abi: BaseV1Voter
+      startBlock: 30511895
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Gauge
+      abis:
+        - name: BaseV1Voter
+          file: ./abis/BaseV1Voter.json
+      eventHandlers:
+        - event: GaugeCreated(indexed address,address,indexed address,indexed address)
+          handler: handleGaugeCreated
+      file: ./src/voter/voter.mapping.ts
 
-      file: ./src/mapping.ts
