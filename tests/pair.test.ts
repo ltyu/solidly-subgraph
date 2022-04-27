@@ -1,47 +1,69 @@
-import { PairCreated } from '../generated/BaseV1Factory/BaseV1Factory'
-import { Address, ethereum, } from '@graphprotocol/graph-ts'
-import { newMockEvent, test, assert, logStore, clearStore, } from 'matchstick-as/assembly'
-import { Pair } from '../generated/schema'
-import { handlePairCreated } from '../src/pair/pair.mapping'
+import { test, assert, logStore, clearStore } from 'matchstick-as/assembly'
+import { handlePairCreated } from '../src/factory/factory.mapping'
+import { handleSync } from '../src/pair/pair.mapping'
+import { handleGaugeCreated } from '../src/voter/voter.mapping'
+import { generatePairName } from '../src/factory/helpers'
+import { createGaugeEvent, createNewPairEvent, createSyncEvent } from './utils/helpers'
+import { erc20TryDecimalsMock, erc20TryNameMock, erc20TrySymbolMock } from './utils/mocks'
 
-export function createNewPairEvent(
-    token0: string,
-    token1: string,
-    stable: boolean,
-    pair: string,
-    allPairsLen: i32
-  ): PairCreated {
-    const mockEvent = newMockEvent()
-    const newPairEvent = new PairCreated(
-        mockEvent.address,
-        mockEvent.logIndex,
-        mockEvent.transactionLogIndex,
-        mockEvent.logType,
-        mockEvent.block,
-        mockEvent.transaction,
-        mockEvent.parameters
-    )
-    newPairEvent.parameters = new Array()
-    const token0Param = new ethereum.EventParam('token0', ethereum.Value.fromAddress(Address.fromString(token0)))
-    const token1Param = new ethereum.EventParam('token1', ethereum.Value.fromAddress(Address.fromString(token1)))
-    const stableParam = new ethereum.EventParam('token1', ethereum.Value.fromBoolean(stable))
-    const pairParam = new ethereum.EventParam('pair', ethereum.Value.fromAddress(Address.fromString(pair)))
-    const allPairsLenParam = new ethereum.EventParam('allPairsLen', ethereum.Value.fromI32(allPairsLen))
-    
-    newPairEvent.parameters.push(token0Param)
-    newPairEvent.parameters.push(token1Param)
-    newPairEvent.parameters.push(stableParam)
-    newPairEvent.parameters.push(pairParam)
-    newPairEvent.parameters.push(allPairsLenParam)
-    return newPairEvent
-  }
+test('Can handle create new pair', () => {
+  const pairAddress = '0x45d749ed03a7715c36680cb4221d24693d3cb34c'
+  const token0Address = '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83'
+  const token1Address = '0x888EF71766ca594DED1F0FA3AE64eD2941740A20'
+  // Mock external contract methods
+  erc20TryDecimalsMock(token0Address)
+  erc20TryDecimalsMock(token1Address)
+  erc20TryNameMock(token0Address, 'Fantom')
+  erc20TryNameMock(token1Address, 'Curve')
+  erc20TrySymbolMock(token0Address, 'FTM')
+  erc20TrySymbolMock(token1Address, 'CRV')
 
-  test('Can handle new pair', () => {
-    const pairAddress = '0x45d749ed03a7715c36680cb4221d24693d3cb34c'
-    const newPairEvent = createNewPairEvent('0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83', '0x888EF71766ca594DED1F0FA3AE64eD2941740A20', true, pairAddress, 1)
-    const pair = handlePairCreated(newPairEvent)
-    assert.fieldEquals('Pair', pairAddress, 'id', pairAddress)
-    assert.booleanEquals(pair.isStable, true)
-    logStore()
-    clearStore()
-  })
+  const newPairEvent = createNewPairEvent(token0Address, token1Address, true, pairAddress, 1)
+  handlePairCreated(newPairEvent)
+
+  assert.fieldEquals('Pair', pairAddress, 'id', pairAddress)
+  assert.fieldEquals('Pair', pairAddress, 'isStable', 'true')
+  assert.fieldEquals('Pair', pairAddress, 'name', generatePairName('FTM', 'CRV', true))
+  clearStore()
+})
+
+test('should sync reserve0 and reserve1 with an existing pair', () => {
+  const pairAddress = '0x45d749ed03a7715c36680cb4221d24693d3cb34c'
+  const token0Address = '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83'
+  const token1Address = '0x888EF71766ca594DED1F0FA3AE64eD2941740A20'
+  // Mock external contract methods
+  erc20TryDecimalsMock(token0Address)
+  erc20TryDecimalsMock(token1Address)
+  erc20TryNameMock(token0Address, 'Fantom')
+  erc20TryNameMock(token1Address, 'Curve')
+  erc20TrySymbolMock(token0Address, 'FTM')
+  erc20TrySymbolMock(token1Address, 'CRV')
+
+  handlePairCreated(createNewPairEvent(token0Address, token1Address, true, pairAddress, 1))
+  handleSync(createSyncEvent(pairAddress, 203, 326))
+  logStore()
+
+  assert.fieldEquals('Pair', pairAddress, 'reserve0', '203')
+  assert.fieldEquals('Pair', pairAddress, 'reserve1', '326')
+  clearStore()
+})
+
+test('should attach gauge to existing pair', () => {
+  const pairAddress = '0x45d749ed03a7715c36680cb4221d24693d3cb34c'
+  const gaugeAddress = '0xaa7679ed483031836941a731f6af06d065737eb8'
+  const token0Address = '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83'
+  const token1Address = '0x888EF71766ca594DED1F0FA3AE64eD2941740A20'
+  // Mock external contract methods
+  erc20TryDecimalsMock(token0Address)
+  erc20TryDecimalsMock(token1Address)
+  erc20TryNameMock(token0Address, 'Fantom')
+  erc20TryNameMock(token1Address, 'Curve')
+  erc20TrySymbolMock(token0Address, 'FTM')
+  erc20TrySymbolMock(token1Address, 'CRV')
+
+  handlePairCreated(createNewPairEvent(token0Address, token1Address, true, pairAddress, 1))
+  handleGaugeCreated(createGaugeEvent(gaugeAddress, pairAddress))
+  assert.fieldEquals('Pair', pairAddress, 'gauge', gaugeAddress)
+
+  logStore()
+})

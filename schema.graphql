@@ -2,20 +2,24 @@ type Pair @entity {
   # pair address
   id: ID!
   isStable: Boolean
+  name: String
   token0: Token!
   token1: Token!
+  reserve0: BigInt
+  reserve1: BigInt
+  gauge: Gauge
 }
 
 type Gauge @entity {
   id: ID!
-  bribeAddress: String
+  bribe: String
 }
 
-# ERC20 Token
 type Token @entity {
   id: ID!
-  decimals: Integer
+  chainId: Int
+  decimals: BigInt
   # isWhitelisted: Boolean
-  # name: String
-  # symbol: String
+  name: String!
+  symbol: String!
 }

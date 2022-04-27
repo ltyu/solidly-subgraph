@@ -1,29 +1,17 @@
-import { PairCreated } from '../../generated/BaseV1Factory/BaseV1Factory'
-import { Pair, Token } from '../../generated/schema'
+import { log } from '@graphprotocol/graph-ts'
+import { Pair } from '../../generated/schema'
+import { Sync } from '../../generated/templates/BaseV1Pair/BaseV1Pair'
 
-export function handlePairCreated(event: PairCreated): Pair {
-    const pair = new Pair(event.params.pair.toHex())
-    pair.isStable = event.params.stable
-
-    // Load or Create Token0
-    let token0 = Token.load(event.params.token0.toHex())
-    if (!token0) {
-        token0 = new Token(event.params.token0.toHex())
-        
-        token0.save()
+// Sets the pair reserve0 and reserve1
+export function handleSync (event: Sync): void {
+    const pairAddress = event.address.toHexString()
+    const pair = Pair.load(pairAddress)
+    if (!pair) {
+        log.error('No pair found for address {}', [pairAddress])
+        return
     }
-    pair.token0 = token0.id
-
-    // Load or Create Token1
-    let token1 = Token.load(event.params.token1.toHex())
-    if (!token1) {
-        token1 = new Token(event.params.token1.toHex())
-        token1.save()
-    }
-    pair.token1 = token1.id
-
-    // Saves
+    pair.reserve0 = event.params.reserve0
+    pair.reserve1 = event.params.reserve1
+   
     pair.save()
-
-    return pair
 }

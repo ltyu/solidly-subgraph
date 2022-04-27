@@ -14,14 +14,17 @@ dataSources:
       apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
-        - Pair
+        - Token
+        - ERC20
       abis:
         - name: BaseV1Factory
           file: ./abis/BaseV1Factory.json
+        - name: ERC20
+          file: ./abis/ERC20.json
       eventHandlers:
         - event: PairCreated(indexed address,indexed address,bool,address,uint256)
           handler: handlePairCreated
-      file: ./src/pair/pair.mapping.ts
+      file: ./src/factory/factory.mapping.ts
   - kind: ethereum
     name: BaseV1Voter
     network: fantom
@@ -42,4 +45,25 @@ dataSources:
         - event: GaugeCreated(indexed address,address,indexed address,indexed address)
           handler: handleGaugeCreated
       file: ./src/voter/voter.mapping.ts
-
+templates:
+  - kind: ethereum
+    name: BaseV1Pair
+    network: fantom
+    source:
+      abi: BaseV1Pair
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Pair
+        - Token
+        - ERC20
+      abis:
+        - name: BaseV1Pair
+          file: ./abis/BaseV1Pair.json
+      eventHandlers:
+        - event: Sync(uint112,uint112)
+          handler: handleSync
+      file: ./src/pair/pair.mapping.ts
+# TODO add Gauge
