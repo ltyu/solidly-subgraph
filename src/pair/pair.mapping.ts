@@ -1,6 +1,7 @@
 import { log } from '@graphprotocol/graph-ts'
-import { Pair } from '../../generated/schema'
+import { Pair, Token } from '../../generated/schema'
 import { Sync } from '../../generated/templates/BaseV1Pair/BaseV1Pair'
+import { tokenAmountToDecimal } from '../token/helpers'
 
 // Sets the pair reserve0 and reserve1
 export function handleSync (event: Sync): void {
@@ -10,8 +11,16 @@ export function handleSync (event: Sync): void {
         log.error('No pair found for address {}', [pairAddress])
         return
     }
-    pair.reserve0 = event.params.reserve0
-    pair.reserve1 = event.params.reserve1
-   
+
+    const token0 = Token.load(pair.token0)
+    if (token0){
+        pair.reserve0 = tokenAmountToDecimal(event.params.reserve0, token0.decimals)
+    }
+
+    const token1 = Token.load(pair.token1)
+    if (token1) {
+        pair.reserve1 = tokenAmountToDecimal(event.params.reserve1, token1.decimals)
+    }
+
     pair.save()
 }

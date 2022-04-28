@@ -1,9 +1,9 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { createMockedFunction } from "matchstick-as";
 
-export function erc20TryDecimalsMock(contractAddress: string): void {
+export function erc20TryDecimalsMock(contractAddress: string, decimals: i32): void {
     createMockedFunction(Address.fromString(contractAddress), 'decimals', 'decimals():(uint8)')
-        .returns([ethereum.Value.fromI32(13)])
+        .returns([ethereum.Value.fromI32(decimals)])
 }
 
 export function erc20TryNameMock(contractAddress: string, name: string): void {

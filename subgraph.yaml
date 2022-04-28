@@ -63,7 +63,7 @@ templates:
         - name: BaseV1Pair
           file: ./abis/BaseV1Pair.json
       eventHandlers:
-        - event: Sync(uint112,uint112)
+        - event: Sync(uint256,uint256)
           handler: handleSync
       file: ./src/pair/pair.mapping.ts
 # TODO add Gauge

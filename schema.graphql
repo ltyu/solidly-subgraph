@@ -5,8 +5,8 @@ type Pair @entity {
   name: String
   token0: Token!
   token1: Token!
-  reserve0: BigInt
-  reserve1: BigInt
+  reserve0: BigDecimal
+  reserve1: BigDecimal
   gauge: Gauge
 }
 
@@ -17,9 +17,7 @@ type Gauge @entity {
 
 type Token @entity {
   id: ID!
-  chainId: Int
-  decimals: BigInt
-  # isWhitelisted: Boolean
+  decimals: BigInt!
   name: String!
   symbol: String!
 }
